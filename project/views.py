@@ -49,7 +49,7 @@ def login_required(f):
 def logout():
     session.pop("logged_in", None)
     flash("Goodbye!")
-    return redirect(url_for("lgoin"))
+    return redirect(url_for("login"))
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -64,5 +64,5 @@ def login():
     else:
         session["logged_in"] = True
         flash("Welcome!")
-        return redirect(url_for("tasks"))
+        # return redirect(url_for("login"))
     return render_template("login.html")
