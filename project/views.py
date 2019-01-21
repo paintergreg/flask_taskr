@@ -12,8 +12,17 @@
 """
 from forms import AddTaskForm, RegisterForm, LoginForm
 from functools import wraps
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import (
+    Flask,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from flask_sqlalchemy import SQLAlchemy
+import datetime
 
 # config
 app = Flask(__name__)
@@ -42,6 +51,32 @@ def login_required(f):
     return wrap
 
 
+def flash_errors(form):
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(
+                u"Error in the %s field - %s"
+                % (getattr(form, field).label.text, error),
+                "error",
+            )
+
+
+def get_open_tasks():
+    return (
+        db.session.query(Task)
+        .filter_by(status="1")
+        .order_by(Task.due_date.asc())
+    )
+
+
+def get_closed_tasks():
+    return (
+        db.session.query(Task)
+        .filter_by(status="0")
+        .order_by(Task.due_date.asc())
+    )
+
+
 #
 # route handlers
 #
@@ -50,6 +85,7 @@ def login_required(f):
 @app.route("/logout")
 def logout():
     session.pop("logged_in", None)
+    session.pop("user_id", None)
     flash("Goodbye!")
     return redirect(url_for("login"))
 
@@ -63,6 +99,7 @@ def login():
             user = User.query.filter_by(name=request.form["name"]).first()
             if user is not None and user.password == request.form["password"]:
                 session["logged_in"] = True
+                session["user_id"] = user.id
                 flash("Welcome")
                 return redirect(url_for("tasks"))
             else:
@@ -75,12 +112,8 @@ def login():
 @app.route("/tasks")
 @login_required
 def tasks():
-    open_tasks = (
-        db.session.query(Task).filter_by(status="1").order_by(Task.due_date.asc())
-    )
-    closed_tasks = (
-        db.session.query(Task).filter_by(status="0").order_by(Task.due_date.asc())
-    )
+    open_tasks = get_open_tasks()
+    closed_tasks = get_closed_tasks()
     return render_template(
         "tasks.html",
         form=AddTaskForm(request.form),
@@ -92,14 +125,29 @@ def tasks():
 @app.route("/add", methods=["GET", "POST"])
 @login_required
 def new_task():
+    error = None
     form = AddTaskForm(request.form)
     if request.method == "POST":
         if form.validate_on_submit():
-            new_task = Task(form.name.data, form.due_date.data, form.priority.data, "1")
+            new_task = Task(
+                form.name.data,
+                form.due_date.data,
+                form.priority.data,
+                datetime.datetime.utcnow(),
+                "1",
+                session["user_id"],
+            )
             db.session.add(new_task)
             db.session.commit()
             flash("New entry was successfully posted. Thanks.")
-        return redirect(url_for("tasks"))
+            return redirect(url_for("tasks"))
+    return render_template(
+        "tasks.html",
+        form=form,
+        error=error,
+        open_tasks=get_open_tasks(),
+        closed_tasks=get_closed_tasks(),
+    )
 
 
 @app.route("/complete/<int:task_id>")
