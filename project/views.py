@@ -22,6 +22,7 @@ from flask import (
     url_for,
 )
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
 import datetime
 
 # config
@@ -177,8 +178,12 @@ def register():
     if request.method == "POST":
         if form.validate_on_submit():
             new_user = User(form.name.data, form.email.data, form.password.data)
-            db.session.add(new_user)
-            db.session.commit()
-            flash("Thanks for registering. Please login.")
-            return redirect(url_for("login"))
+            try:
+                db.session.add(new_user)
+                db.session.commit()
+                flash("Thanks for registering. Please login.")
+                return redirect(url_for("login"))
+            except IntegrityError:
+                error = "That username and/or email already exist."
+                return render_template("register.html", form=form, error=error)
     return render_template("register.html", form=form, error=error)
