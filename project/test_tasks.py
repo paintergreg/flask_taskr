@@ -11,11 +11,9 @@
     Unit Tests
 """
 
-import os
 import unittest
 
 from views import app, db
-from _config import basedir
 from models import User
 
 TEST_DB = "test.db"
@@ -86,89 +84,6 @@ class AllTests(unittest.TestCase):
     #
 
     # each test should start with 'test'
-    def test_user_setup(self):
-        new_user = User("greg", "greg@gpainter.org", "!secure_password")
-        db.session.add(new_user)
-        db.session.commit()
-        test = db.session.query(User).all()
-        for t in test:
-            t.name
-        assert t.name == "greg"
-
-    def test_form_is_present(self):
-        response = self.app.get("/")
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Please login to access your task list.", response.data)
-
-    def test_users_cannot_login_unless_registered(self):
-        response = self.login("foo", "bar")
-        self.assertIn(b"Invalid username or password", response.data)
-
-    def test_users_can_login(self):
-        self.register(
-            "newGuy", "newGuy@realpython.com", "passwordOne", "passwordOne"
-        )
-        response = self.login("newGuy", "passwordOne")
-        self.assertIn(b"Welcome to FlaskTaskr", response.data)
-
-    def test_invalid_form_data(self):
-        self.register(
-            "newGuy", "newGuy@realpython.com", "passwordOne", "passwordOne"
-        )
-        response = self.login("NotARegisteredUser", "NotAPassword")
-        self.assertIn(b"Invalid username or password", response.data)
-
-    def test_form_is_present_on_register_page(self):
-        response = self.app.get("/register")
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(
-            b"Please register to access the task list.", response.data
-        )
-
-    def test_user_registration(self):
-        self.app.get("/register", follow_redirects=True)
-        response = self.register(
-            "newGuy", "newGuy@realpython.com", "passwordOne", "passwordOne"
-        )
-        self.assertIn(b"Thanks for registering. Please login.", response.data)
-
-    def test_user_registration_error(self):
-        self.app.get("/register", follow_redirects=True)
-        self.register(
-            "newGuy", "newGuy@realpython.com", "passwordOne", "passwordOne"
-        )
-        self.app.get("/register", follow_redirects=True)
-        response = self.register(
-            "newGuy", "newGuy@realpython.com", "passwordOne", "passwordOne"
-        )
-        self.assertIn(
-            b"That username and/or email already exist.", response.data
-        )
-
-    def test_logged_in_users_can_logout(self):
-        self.register(
-            "newGuy", "newGuy@realpython.com", "passwordOne", "passwordOne"
-        )
-        self.login("newGuy", "passwordOne")
-        response = self.logout()
-        self.assertIn(b"Goodbye!", response.data)
-
-    def test_not_logged_in_users_cannot_logout(self):
-        response = self.logout()
-        self.assertNotIn(b"Goodbye!", response.data)
-
-    def test_logged_in_users_can_access_tasks_page(self):
-        self.register(
-            "newGuy", "newGuy@realpython.com", "passwordOne", "passwordOne"
-        )
-        self.login("newGuy", "passwordOne")
-        response = self.app.get("/tasks")
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Add a new task:", response.data)
-
-    def test_not_logged_in_users_cannot_access_tasks_page(self):
-        response = self.app.get("/tasks", follow_redirects=True)
-        self.assertIn(b"You need to login first.", response.data)
 
     def test_users_can_add_tasks(self):
         self.create_user("newGuy", "newGuy@realpython.com", "passwordOne")
