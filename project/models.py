@@ -36,7 +36,7 @@ class Task(db.Model):
         self.user_id = user_id
 
     def __repr__(self):
-        return f"<name {self.name}>"
+        return f"<Task:: {self.name} {self.due_date} {self.status}>"
 
 
 class User(db.Model):
@@ -48,11 +48,13 @@ class User(db.Model):
     email = db.Column(db.String, unique=True, nullable=False)
     password = db.Column(db.String, nullable=False)
     tasks = db.relationship("Task", backref="poster")
+    role  = db.Column(db.String, default="user")
 
-    def __init__(self, name=None, email=None, password=None):
+    def __init__(self, name=None, email=None, password=None, role=None):
         self.name = name
         self.email = email
         self.password = password
+        self.role = role
 
     def __repr__(self):
-        return f"<User {self.name}>"
+        return f"<User:: {self.name} {self.email} {self.role}>"

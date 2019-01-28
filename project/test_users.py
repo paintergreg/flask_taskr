@@ -70,13 +70,13 @@ class AllTests(unittest.TestCase):
 
     # each test should start with 'test'
     def test_user_setup(self):
-        new_user = User("greg", "greg@gpainter.org", "!secure_password")
-        db.session.add(new_user)
-        db.session.commit()
+        self.create_user("newGuy", "newGuy@email.com", "passwordOne")
         test = db.session.query(User).all()
         for t in test:
-            t.name
-        assert t.name == "greg"
+            print(f"In test_user_setup :: {t}")
+        self.assertEqual(t.name, "newGuy")
+        self.assertEqual(t.email, "newGuy@email.com")
+        self.assertEqual(t.password, "passwordOne")
 
     def test_form_is_present(self):
         response = self.app.get("/")
@@ -154,6 +154,13 @@ class AllTests(unittest.TestCase):
     def test_not_logged_in_users_cannot_access_tasks_page(self):
         response = self.app.get("/tasks", follow_redirects=True)
         self.assertIn(b"You need to login first.", response.data)
+
+    def test_default_user_role(self):
+        db.session.add(User("newGuy", "newGuy@realpython.com", "passwordOne"))
+        db.session.commit()
+        users = db.session.query(User).all()
+        for user in users:
+            self.assertEqual(user.role, "user")
 
 
 if __name__ == "__main__":

@@ -79,6 +79,16 @@ class AllTests(unittest.TestCase):
             follow_redirects=True,
         )
 
+    def create_admin_user(self):
+        new_user = User(
+            name="root",
+            email="admin@email.com",
+            password="passwordOne",
+            role="admin",
+        )
+        db.session.add(new_user)
+        db.session.commit()
+
     #
     # Integration and Unit Tests
     #
@@ -88,7 +98,6 @@ class AllTests(unittest.TestCase):
     def test_users_can_add_tasks(self):
         self.create_user("newGuy", "newGuy@realpython.com", "passwordOne")
         self.login("newGuy", "passwordOne")
-        self.app.get("/tasks", follow_redirects=True)
         response = self.create_task()
         self.assertIn(
             b"New entry was successfully posted. Thanks.", response.data
@@ -97,7 +106,6 @@ class AllTests(unittest.TestCase):
     def test_users_connot_add_task_when_error(self):
         self.create_user("newGuy", "newGuy@realpython.com", "passwordOne")
         self.login("newGuy", "passwordOne")
-        self.app.get("/tasks", follow_redirects=True)
         response = self.app.post(
             "/add",
             data=dict(
@@ -114,7 +122,6 @@ class AllTests(unittest.TestCase):
     def test_users_can_complete_tasks(self):
         self.create_user("newGuy", "newGuy@realpython.com", "passwordOne")
         self.login("newGuy", "passwordOne")
-        self.app.get("/tasks", follow_redirects=True)
         self.create_task()
         response = self.app.get("/complete/1", follow_redirects=True)
         self.assertIn(b"The task is complete. Nice.", response.data)
@@ -122,7 +129,6 @@ class AllTests(unittest.TestCase):
     def test_users_can_delete_tasks(self):
         self.create_user("newGuy", "newGuy@realpython.com", "passwordOne")
         self.login("newGuy", "passwordOne")
-        self.app.get("/tasks", follow_redirects=True)
         self.create_task()
         response = self.app.get("/delete/1", follow_redirects=True)
         self.assertIn(b"The task was deleted.", response.data)
@@ -130,14 +136,28 @@ class AllTests(unittest.TestCase):
     def test_users_cannot_complete_tasks_that_are_not_created_by_them(self):
         self.create_user("newGuy", "newGuy@realpython.com", "passwordOne")
         self.login("newGuy", "passwordOne")
-        self.app.get("/tasks", follow_redirects=True)
         self.create_task()
         self.logout()
         self.create_user("newGuy2", "newGuy2@realpython.com", "passwordOne")
         self.login("newGuy2", "passwordOne")
-        self.app.get("/tasks", follow_redirects=True)
         response = self.app.get("/complete/1", follow_redirects=True)
         self.assertNotIn(b"The task is complete. Nice.", response.data)
+        self.assertIn(
+            b"You can only update tasks that belong to you.", response.data
+        )
+
+    def test_users_cannot_delete_tasks_that_are_not_created_by_them(self):
+        self.create_user("newGuy", "newGuy@email.com", "passwordOne")
+        self.login("newGuy", "passwordOne")
+        # self.app.get("/tasks", follow_redirects=True)
+        self.create_task()
+        self.logout()
+        self.create_user("newGuy2", "newGuy2@email.com", "passwordOne")
+        self.login("newGuy2", "passwordOne")
+        response = self.app.get("/delete/1", follow_redirects=True)
+        self.assertIn(
+            b"You can only delete tasks that belong to you.", response.data
+        )
 
 
 if __name__ == "__main__":
