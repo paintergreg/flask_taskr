@@ -13,8 +13,8 @@
 
 import unittest
 
-from views import app, db
-from models import User
+from project import app, db
+from project.models import User, Task
 
 TEST_DB = "test.db"
 
@@ -101,6 +101,7 @@ class AllTests(unittest.TestCase):
         response = self.create_task()
         self.assertIn(
             b"New entry was successfully posted. Thanks.", response.data
+
         )
 
     def test_users_connot_add_task_when_error(self):

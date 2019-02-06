@@ -60,7 +60,7 @@ def closed_tasks():
 
 
 # routes
-@tasks_blueprint.route("/tasks/")
+@tasks_blueprint.route("/tasks")
 @login_required
 def tasks():
     return render_template(
@@ -88,7 +88,7 @@ def new_task():
             )
             db.session.add(new_task)
             db.session.commit()
-            flash("New entry was successfully posted, Thanks.")
+            flash("New entry was successfully posted. Thanks.")
             return redirect(url_for("tasks.tasks"))
     return render_template(
         "tasks.html",

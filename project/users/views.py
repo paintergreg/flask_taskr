@@ -72,7 +72,7 @@ def login():
     return render_template("login.html", form=form, error=error)
 
 
-@users_blueprint.route("/register/", methods=["GET", "POST"])
+@users_blueprint.route("/register", methods=["GET", "POST"])
 def register():
     error = None
     form = RegisterForm(request.form)
@@ -86,4 +86,5 @@ def register():
                 return redirect(url_for("users.login"))
             except IntegrityError:
                 error = "That username and/or email already exist."
+                return render_template("register.html", form=form, error=error)
     return render_template("register.html", form=form, error=error)
