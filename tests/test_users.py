@@ -162,6 +162,14 @@ class AllTests(unittest.TestCase):
         for user in users:
             self.assertEqual(user.role, "user")
 
+    def test_task_template_displays_logged_in_user_name(self):
+        self.register(
+            "newGuy", "newGuy@realpython.com", "passwordOne", "passwordOne"
+        )
+        self.login("newGuy", "passwordOne")
+        response = self.app.get("/tasks", follow_redirects=True)
+        self.assertIn(b"newGuy", response.data)
+
 
 if __name__ == "__main__":
     unittest.main()

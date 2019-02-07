@@ -68,6 +68,7 @@ def tasks():
         form=AddTaskForm(request.form),
         open_tasks=open_tasks(),
         closed_tasks=closed_tasks(),
+        username=session["name"],
     )
 
 
@@ -99,7 +100,7 @@ def new_task():
     )
 
 
-@tasks_blueprint.route("/complete/<int:task_id>/")
+@tasks_blueprint.route("/complete/<int:task_id>")
 @login_required
 def complete(task_id):
     new_id = task_id

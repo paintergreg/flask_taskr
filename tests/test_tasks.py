@@ -101,7 +101,6 @@ class AllTests(unittest.TestCase):
         response = self.create_task()
         self.assertIn(
             b"New entry was successfully posted. Thanks.", response.data
-
         )
 
     def test_users_connot_add_task_when_error(self):
@@ -160,6 +159,53 @@ class AllTests(unittest.TestCase):
             b"You can only delete tasks that belong to you.", response.data
         )
 
+    def test_users_cannot_see_modify_links_for_task_not_created_by_them(self):
+        self.register(
+            "newGuy1", "newGuy1@gmail.com", "passwordOne", "passwordOne"
+        )
+        self.login("newGuy1", "passwordOne")
+        self.app.get("/tasks", follow_redirects=True)
+        self.create_task()
+        self.logout()
+        self.register(
+            "newGuy2", "newGuy2@gmail.com", "passwordOne", "passwordOne"
+        )
+        self.login("newGuy2", "passwordOne")
+        response = self.app.get("tasks", follow_redirects=True)
+        self.assertNotIn(b"Mark as Complete", response.data)
+        self.assertNotIn(b"Delete", response.data)
 
+    def test_users_can_see_modify_links_for_tasks_created_by_them(self):
+        self.register(
+            "newGuy1", "newGuy1@gmail.com", "passwordOne", "passwordOne"
+        )
+        self.login("newGuy1", "passwordOne")
+        self.app.get("/tasks", follow_redirects=True)
+        self.create_task()
+        self.logout()
+        self.register(
+            "newGuy2", "newGuy2@gmail.com", "passwordOne", "passwordOne"
+        )
+        self.login("newGuy2", "passwordOne")
+        response = self.create_task()
+        self.assertIn(b"/complete/2", response.data)
+        self.assertIn(b"/delete/2", response.data)
+
+    def test_admin_users_can_see_modify_links_for_all_tasks(self):
+        self.register(
+            "newGuy1", "newGuy1@gmail.com", "passwordOne", "passwordOne"
+        )
+        self.login("newGuy1", "passwordOne")
+        self.app.get("/tasks", follow_redirects=True)
+        self.create_task()
+        self.logout()
+        self.create_admin_user()
+        self.login("root", "passwordOne")
+        self.app.get("/tasks", follow_redirects=True)
+        response = self.create_task()
+        self.assertIn(b"/complete/1", response.data)
+        self.assertIn(b"/delete/1", response.data)
+        self.assertIn(b"/complete/2", response.data)
+        self.assertIn(b"/delete/2", response.data)
 if __name__ == "__main__":
     unittest.main()
