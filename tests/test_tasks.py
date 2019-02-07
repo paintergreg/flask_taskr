@@ -13,7 +13,7 @@
 
 import unittest
 
-from project import app, db
+from project import app, db, bcrypt
 from project.models import User, Task
 
 TEST_DB = "test.db"
@@ -62,7 +62,11 @@ class AllTests(unittest.TestCase):
         )
 
     def create_user(self, name, email, password):
-        new_user = User(name=name, email=email, password=password)
+        new_user = User(
+            name=name,
+            email=email,
+            password=bcrypt.generate_password_hash(password),
+        )
         db.session.add(new_user)
         db.session.commit()
 
@@ -83,7 +87,7 @@ class AllTests(unittest.TestCase):
         new_user = User(
             name="root",
             email="admin@email.com",
-            password="passwordOne",
+            password=bcrypt.generate_password_hash("passwordOne"),
             role="admin",
         )
         db.session.add(new_user)
@@ -207,5 +211,7 @@ class AllTests(unittest.TestCase):
         self.assertIn(b"/delete/1", response.data)
         self.assertIn(b"/complete/2", response.data)
         self.assertIn(b"/delete/2", response.data)
+
+
 if __name__ == "__main__":
     unittest.main()

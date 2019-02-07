@@ -13,7 +13,7 @@
 
 import unittest
 
-from project import app, db
+from project import app, db, bcrypt
 from project.models import User
 
 
@@ -60,7 +60,11 @@ class AllTests(unittest.TestCase):
         )
 
     def create_user(self, name, email, password):
-        new_user = User(name=name, email=email, password=password)
+        new_user = User(
+            name=name,
+            email=email,
+            password=bcrypt.generate_password_hash(password),
+        )
         db.session.add(new_user)
         db.session.commit()
 
@@ -71,12 +75,11 @@ class AllTests(unittest.TestCase):
     # each test should start with 'test'
     def test_user_setup(self):
         self.create_user("newGuy", "newGuy@email.com", "passwordOne")
-        test = db.session.query(User).all()
-        for t in test:
-            print(f"In test_user_setup :: {t}")
-        self.assertEqual(t.name, "newGuy")
-        self.assertEqual(t.email, "newGuy@email.com")
-        self.assertEqual(t.password, "passwordOne")
+        users = db.session.query(User).all()
+        for user in users:
+            print(f"In test_user_setup :: {user}")
+            self.assertEqual(user.name, "newGuy")
+            self.assertEqual(user.email, "newGuy@email.com")
 
     def test_form_is_present(self):
         response = self.app.get("/")
@@ -147,7 +150,7 @@ class AllTests(unittest.TestCase):
             "newGuy", "newGuy@realpython.com", "passwordOne", "passwordOne"
         )
         self.login("newGuy", "passwordOne")
-        response = self.app.get("/tasks")
+        response = self.app.get("/tasks", follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Add a new task:", response.data)
 
