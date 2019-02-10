@@ -3,4 +3,5 @@ project/*.db
 *.sublime-workspace
 project/.coverage
 project/htmlcov
+*.log
 .coverage

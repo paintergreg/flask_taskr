@@ -12,9 +12,7 @@
 """
 
 
-from views import db
-from models import Task
-from datetime import date
+from project import db
 
 # create the database and the db table
 db.create_all()

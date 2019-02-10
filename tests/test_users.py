@@ -33,6 +33,7 @@ class AllTests(unittest.TestCase):
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
         self.app = app.test_client()
         db.create_all()
+        self.assertEquals(app.debug, False)
 
     # execute after each test
     def tearDown(self):
