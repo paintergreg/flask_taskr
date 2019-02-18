@@ -3,5 +3,6 @@ project/*.db
 *.sublime-workspace
 project/.coverage
 project/htmlcov
+.env
 *.log
 .coverage
